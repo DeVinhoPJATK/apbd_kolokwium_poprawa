@@ -1,3 +1,5 @@
+using System.Runtime.InteropServices.JavaScript;
+using apbd_kolokwium_poprawa.Models.dto;
 using apbd_kolokwium_poprawa.Repository;
 using Microsoft.AspNetCore.Mvc;
 
@@ -7,7 +9,6 @@ namespace apbd_kolokwium_poprawa.Controller;
 [Route("/api")]
 public class ApiController : ControllerBase
 {
-
     private readonly IPatientRepository _patientRepository;
 
     public ApiController(IPatientRepository patientRepository)
@@ -23,6 +24,18 @@ public class ApiController : ControllerBase
         {
             NotFound();
         }
+
         return Ok(patientData);
+    }
+
+    [HttpPost("visit")]
+    public IActionResult CreateVisit(CreateVisitDto dto)
+    {
+        var created = _patientRepository.CreateVisit(dto);
+        if (created == null)
+        {
+            return NotFound();
+        }
+        return Ok(created);
     }
 }

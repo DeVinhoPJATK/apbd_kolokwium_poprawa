@@ -5,4 +5,5 @@ namespace apbd_kolokwium_poprawa.Repository;
 public interface IPatientRepository
 {
     PatientDTO GetPatientData(int patientId);
+    CreatedVisitDto CreateVisit(CreateVisitDto dto);
 }

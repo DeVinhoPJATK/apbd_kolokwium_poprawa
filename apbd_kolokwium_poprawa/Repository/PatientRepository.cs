@@ -1,4 +1,5 @@
 using apbd_kolokwium_poprawa.Context;
+using apbd_kolokwium_poprawa.Models;
 using apbd_kolokwium_poprawa.Models.dto;
 
 namespace apbd_kolokwium_poprawa.Repository;
@@ -14,32 +15,7 @@ public class PatientRepository : IPatientRepository
 
     public PatientDTO GetPatientData(int patientId)
     {
-        // var clientSubscriptions = _context.ClientSubscriptions
-        // .Where(o => o.ClientId == clientId)
-        // .Join(_context.Subscriptions,
-        // cs => cs.SubscriptionId,
-        // s => s.SubscriptionId,
-        // (cs, s) => new
-        // {
-        // s.SubscriptionId,
-        // s.SubscriptionName,
-        // s.Description
-        // })
-        // .ToList();
-        // var patientData = _context.Visits
-        // .Where(v => v.IdPatient == patientId)
-        // .Join(_context.Patients,
-        // v => v.IdPatient,
-        // p => p.IdPatient,
-        // (v, p) => new
-        // {
-        // p.FirstName,
-        // p.LastName,
-        // p.Birthdate,
-        // p.Visits.Count
-        // }).ToList();
-
-        var patient = _context.Patients.FirstOrDefault(p => p.IdPatient == patientId);
+        var patient = _context.Patients.Find(patientId);
         if (patient == null)
         {
             return null;
@@ -78,5 +54,42 @@ public class PatientRepository : IPatientRepository
         patientDto.TotalMoneySpent = moneySpent + " zł";
 
         return patientDto;
+    }
+
+    public CreatedVisitDto CreateVisit(CreateVisitDto dto)
+    {
+        var patient = _context.Patients.Find(dto.IdPatient);
+        if (patient == null)
+        {
+            return null;
+        }
+
+        var doctor = _context.Doctors.Find(dto.IdDoctor);
+        if (doctor == null)
+        {
+            return null;
+        }
+
+        int nextId = _context.Visits.OrderByDescending(v => v.IdVisit).First().IdVisit;
+
+        var visit = new Visit();
+        visit.IdVisit = nextId + 1;
+        visit.Date = dto.Date;
+        visit.Price = CalcPrice(doctor.PriceForVisit, patient.Visits);
+        visit.IdPatient = patient.IdPatient;
+        visit.IdDoctor = doctor.IdDoctor;
+        var savedVisit = _context.Visits.Add(visit).Entity;
+        _context.SaveChanges();
+        return new CreatedVisitDto(savedVisit.IdVisit);
+    }
+
+    private decimal CalcPrice(decimal doctorPrice, ICollection<Visit> vists)
+    {
+        decimal price = doctorPrice;
+        if (vists.Count > 10)
+        {
+            price = price * Convert.ToDecimal(0.9);
+        }
+        return price;
     }
 }
